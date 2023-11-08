@@ -21,24 +21,17 @@ import { onMounted, ref } from 'vue'
 const threeRef = ref<HTMLCanvasElement>()
 const threeContainerRef = ref<HTMLDivElement>()
 let scene = new THREE.Scene()
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000)
 let renderer = new THREE.WebGLRenderer()
 let controls: OrbitControls
 
-let cylinderRadius = 0
-let cylinderOpacity = 1
-
-const threeText = () => {
-  //draw three text
-
-  const geometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, 1, 32)
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xff0000,
-    opacity: cylinderOpacity,
-    transparent: true
-  })
-  const mesh = new THREE.Mesh(geometry, material)
-  scene.add(mesh)
+const drawTestBox = () => {
+  //draw a box
+  let geometry = new THREE.BoxGeometry(1, 1, 1)
+  let material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  let cube = new THREE.Mesh(geometry, material)
+  scene.add(cube)
+  cube.position.set(0, 0, 0)
 }
 
 const render = async () => {
@@ -90,27 +83,17 @@ const render = async () => {
   controls.update()
 }
 
-//光圈动画
-//圆柱光圈扩散动画
-const cylinderAnimate = () => {
-  cylinderRadius += 0.01
-  cylinderOpacity -= 0.003
-  if (cylinderRadius > 1.6) {
-    cylinderRadius = 0
-    cylinderOpacity = 1
-  }
-}
-
 const animate = () => {
-  cylinderAnimate()
+  // cylinderAnimate()
   requestAnimationFrame(animate)
+  controls.update()
   renderer.render(scene, camera)
 }
 
 onMounted(() => {
   render()
   animate()
-  threeText()
+  drawTestBox()
   // threeTextClick()
   // aperture()
 })
