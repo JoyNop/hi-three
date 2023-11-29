@@ -12,6 +12,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "ali-oss": "^6.18.1",
     "pinia": "^2.1.7",
     "three": "^0.158.0",
     "unplugin-auto-import": "^0.16.7",

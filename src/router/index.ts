@@ -26,6 +26,16 @@ const router = createRouter({
       path: '/three-demo',
       name: 'three-demo',
       component: () => import('../views/ThreeView.vue')
+    },
+    {
+      path: '/file',
+      name: 'file',
+      component: () => import('../views/FileView.vue')
+    },
+    {
+      path: '/cj1',
+      name: 'choujiang1',
+      component: () => import('../views/choujiang/CjView1.vue')
     }
   ]
 })

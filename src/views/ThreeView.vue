@@ -5,6 +5,7 @@
     </div>
 
     <div class="three-container" ref="threeContainerRef">
+      <div ref="statsRef">statsRef</div>
       <canvas ref="threeRef"> </canvas>
     </div>
   </div>
@@ -15,9 +16,11 @@ import { NButton } from 'naive-ui'
 //  import three and use it to draw a box
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import Stats from 'three/examples/jsm/libs/stats.module.js'
 
 import { onMounted, ref } from 'vue'
 
+const statsRef = ref<HTMLDivElement>()
 const threeRef = ref<HTMLCanvasElement>()
 const threeContainerRef = ref<HTMLDivElement>()
 let scene = new THREE.Scene()
@@ -28,30 +31,36 @@ let renderer = new THREE.WebGLRenderer({
   precision: 'highp' //着色器开启高精度
 })
 let controls = new OrbitControls(camera, renderer.domElement)
+const stats = new Stats()
+
+const clock = new THREE.Clock()
 
 const drawTestBox = () => {
   //draw a box
-  let geometry = new THREE.BoxGeometry(1, 1, 1)
-  let material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  let geometry = new THREE.BoxGeometry(100, 100, 100)
+  let material = new THREE.MeshLambertMaterial({ color: 0xffffff })
   let cube = new THREE.Mesh(geometry, material)
   scene.add(cube)
-  cube.position.set(0, 0, 0)
+  // cube.position.set(0, 0, 0)
 }
 const setThreeTools = () => {
+  //add stats
+  statsRef.value?.appendChild(stats.dom)
+
   //添加坐标轴
   const axesHelper = new THREE.AxesHelper(1000)
   scene.add(axesHelper)
   // 添加网格
   const gridHelper = new THREE.GridHelper(1000, 100)
-  scene.add(gridHelper)
+  // scene.add(gridHelper)
   // 添加相机辅助线
 
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
   const helper = new THREE.CameraHelper(camera)
-  scene.add(helper)
+  // scene.add(helper)
   // 极坐标格辅助对象
   const polarGridHelper = new THREE.PolarGridHelper(100, 10, 8, 64, 0x0000ff, 0x808080)
-  scene.add(polarGridHelper)
+  // scene.add(polarGridHelper)
 }
 
 const setControls = () => {
@@ -70,6 +79,13 @@ const setControls = () => {
   controls.maxDistance = 2000
   // 是否开启右键拖拽
   controls.enablePan = true
+  // 鼠标滚轮缩放
+  controls.enableZoom = true
+  // 鼠标滚轮缩放速度
+  controls.zoomSpeed = 1.2
+  // controls.update()
+  // 设置相机自动旋转
+  // controls.autoRotate = true
 }
 
 const render = async () => {
@@ -84,17 +100,40 @@ const render = async () => {
   console.log('clientHeight', canvas.clientHeight)
   console.log('w/h', canvas.clientWidth / canvas.clientHeight)
   //2.创建相机
-  camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000)
+  camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 8000)
   //3.设置相机位置
-  camera.position.set(0, 0, 4)
+  camera.position.set(200, 200, 200)
   scene.add(camera)
 
   //设置环境光，要不然模型没有颜色
-  let ambientLight = new THREE.AmbientLight() //设置环境光
+  let ambientLight = new THREE.AmbientLight(0xffffff, 10000) //设置环境光
   scene.add(ambientLight) //将环境光添加到场景中
-  let pointLight = new THREE.PointLight()
-  pointLight.position.set(200, 200, 200) //设置点光源位置
-  scene.add(pointLight) //将点光源添加至场景
+  let pointLight = new THREE.PointLight(0xff0000, 2)
+  pointLight.intensity = 9000
+  pointLight.decay = 0.0
+  pointLight.position.set(120, 120, 120) //设置点光源位置
+  // scene.add(pointLight) //将点光源添加至场景
+
+  //可视化点光源
+  // const pHelper = new THREE.PointLightHelper(pointLight, 10)
+  // scene.add(pHelper)
+
+  //添加一个平行光
+  // const directionalLight = new THREE.DirectionalLight(0xffff00, 0.1)
+  // directionalLight.position.set(150, -100, 150)
+  // directionalLight.position.set(150, 10, 150)
+  // directionalLight.target.position.set(150, -120, 500)
+
+  // const endMesh = new THREE.Mesh(
+  //   new THREE.SphereGeometry(1, 1, 1),
+  //   new THREE.MeshLambertMaterial({ color: 0xff0000 })
+  // )
+  // endMesh.position.set(150, 0, 150)
+  // directionalLight.target = endMesh
+  // scene.add(directionalLight)
+  //可视化平行光
+  // const dHelper = new THREE.DirectionalLightHelper(directionalLight, 10)
+  // scene.add(dHelper)
 
   //7.初始化渲染器
   //渲染器透明
@@ -109,7 +148,8 @@ const render = async () => {
   renderer.setPixelRatio(window.devicePixelRatio)
   // renderer.setSize(container.scrollWidth, container.scrollHeight)
   //设置渲染器尺寸大小
-  renderer.setClearColor(0xf4f8fc, 1)
+  // renderer.setClearColor(0xf4f8fc, 1)
+  renderer.setClearColor(0x000000, 1)
   renderer.setSize(container.clientWidth, container.clientHeight)
   //将webgl渲染的canvas内容添加到div
 
@@ -119,11 +159,24 @@ const render = async () => {
   controls.update()
 }
 
+const meshRotate = () => {
+  //旋转
+  camera.rotation.x += 0.01
+  camera.rotation.y += 0.01
+  camera.rotation.z += 0.01
+
+  // const spt = clock.getDelta() * 1000
+  // console.log('spt', spt)
+  //渲染帧率
+  // console.log('fps', 1000 / spt)
+}
+
 const animate = () => {
   // cylinderAnimate()
+  // meshRotate()
   requestAnimationFrame(animate)
   controls.update()
-
+  stats.update()
   renderer.clear() // 清除画布
   renderer.render(scene, camera)
 }
