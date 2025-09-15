@@ -13,8 +13,11 @@
   },
   "dependencies": {
     "ali-oss": "^6.18.1",
+    "axios": "^1.6.3",
     "pinia": "^2.1.7",
     "three": "^0.158.0",
+    "three-csg-ts": "^3.2.0",
+    "three-mesh-bvh": "^0.7.5",
     "unplugin-auto-import": "^0.16.7",
     "unplugin-vue-components": "^0.25.2",
     "vue": "^3.3.4",

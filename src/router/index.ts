@@ -28,14 +28,19 @@ const router = createRouter({
       component: () => import('../views/ThreeView.vue')
     },
     {
+      path: '/three-cloud',
+      name: 'three-cloud',
+      component: () => import('../views/ThreeCloud.vue')
+    },
+    {
+      path: '/mesh-hole',
+      name: 'mesh-hole',
+      component: () => import('../views/MeshHole.vue')
+    },
+    {
       path: '/file',
       name: 'file',
       component: () => import('../views/FileView.vue')
-    },
-    {
-      path: '/cj1',
-      name: 'choujiang1',
-      component: () => import('../views/choujiang/CjView1.vue')
     }
   ]
 })

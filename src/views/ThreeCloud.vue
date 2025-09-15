@@ -4,7 +4,7 @@
       <NButton>test</NButton>
     </div>
 
-    <div class="three-container" ref="threeContainerRef">
+    <div class="three-container" ref="threeContainerRef" style="z-index: 9999">
       <div ref="statsRef">statsRef</div>
       <canvas ref="threeRef"> </canvas>
     </div>
@@ -39,100 +39,178 @@ const gui = new GUI()
 
 const clock = new THREE.Clock()
 
-const drawTestBox = () => {
-  //draw a box
-  // let geometry = new THREE.BoxGeometry(100, 100, 100)
-  // let
-  const geometry = new THREE.SphereGeometry(50)
-  const material = new THREE.MeshPhongMaterial({
-    color: 0xff0000,
-    shininess: 60, //高光部分的亮度，默认30
-    specular: 0x444444 //高光部分的颜色
-  })
-  let cube = new THREE.Mesh(geometry, material)
-  scene.add(cube)
-  // cube.position.set(0, 0, 0)
-  gui.add(cube.position, 'x', -100, 100)
-}
-
-const tubeGeometry = () => {
-  const path = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-50, 20, 90),
-    // new THREE.Vector3(-10, 40, 40),
-    new THREE.Vector3(0, 0, 0)
-    // new THREE.Vector3(60, -60, 0),
-    // new THREE.Vector3(70, 0, 80)
-  ])
-  // path:路径   40：沿着轨迹细分数  2：管道半径   25：管道截面圆细分数
-  const geometry = new THREE.TubeGeometry(path, 40, 2, 25)
-  const material = new THREE.MeshLambertMaterial({
-    color: 'blue',
-    side: THREE.DoubleSide //双面显示看到管道内壁
-  })
-  const mesh = new THREE.Mesh(geometry, material)
-  scene.add(mesh)
-
-  // scene.add(mesh2)
-}
-
+// 定义一个函数来绘制网格
 const drawMesh = () => {
-  //创建一个几何体，沿着x轴平移10，并且自身旋转
-  const geometry = new THREE.BoxGeometry(10, 10, 10)
-  const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-  const mesh = new THREE.Mesh(geometry, material)
-  mesh.position.x = 10
-  mesh.rotation.x = 0.5
-  scene.add(mesh)
-}
-
-const drawBufferGeometry = () => {
-  //draw a box
+  //生成数据，随机100个数据
+  const numPoints = 100
+  const points = []
+  for (let i = 0; i < numPoints; i++) {
+    // 生成随机坐标
+    const x = (Math.random() - 0.5) * 10
+    const y = (Math.random() - 0.5) * 10
+    const z = (Math.random() - 0.5) * 10
+    points.push(new THREE.Vector3(x, y, z))
+  }
+  // 创建一个新的BufferGeometry对象来存储网格的顶点数据
   const geometry = new THREE.BufferGeometry()
-  //添加定点数据
-  //类型化数组定义一组顶点坐标数据
-  const vertices = new Float32Array([
-    //point1
-    0, 0, 0,
-    // point2
-    50, 0, 0,
-    // point3
-    0, 100, 0,
-    // point4
-    0, 0, 100,
-    // point5
-    50, 0, 100,
-    // point6
-    50, 50, 120
-  ])
 
-  const material1 = new THREE.PointsMaterial({
-    color: 0xff0000,
-    size: 10
-  })
-  const material = new THREE.LineBasicMaterial({
-    color: 0xfffff00
+  // 用于存储索引数据的数组，用于定义网格的三角形
+  const indices = []
+
+  // 用于存储顶点坐标、法线方向和颜色信息的数组
+  const vertices = []
+  const normals = []
+  const colors = []
+
+  // 定义网格的总大小和分割段数
+  const size = 20
+  const segments = 10
+
+  // 计算网格的一半大小（用于中心对齐）和每个段的大小
+  const halfSize = size / 2
+  const segmentSize = size / segments
+
+  // 创建一个新的Color对象，用于设置颜色
+  const _color = new THREE.Color()
+
+  // 生成网格的顶点、法线和颜色数据
+  for (let i = 0; i <= segments; i++) {
+    // 遍历网格的垂直段
+    const y = i * segmentSize - halfSize // 计算y坐标
+
+    for (let j = 0; j <= segments; j++) {
+      // 遍历网格的水平段
+      const x = j * segmentSize - halfSize // 计算x坐标
+
+      // 将顶点坐标添加到vertices数组中
+      vertices.push(x, -y, 0) // 注意：y取负值是为了使网格在y轴方向上是向上的
+
+      // 网格的法线方向设置为面向z轴正方向
+      normals.push(0, 0, 1)
+
+      // 根据x和y坐标计算颜色值
+      const r = x / size + 0.5
+      const g = y / size + 0.5
+
+      // 设置颜色，并转换为sRGB颜色空间
+      _color.setRGB(r, g, 1, THREE.SRGBColorSpace)
+
+      // 将颜色的r、g、b分量添加到colors数组中
+      colors.push(_color.r, _color.g, _color.b)
+    }
+  }
+
+  // 生成索引数据，用于定义网格的三角形面
+  for (let i = 0; i < segments; i++) {
+    // 遍历垂直段的内部边界（不包括最后一个）
+    for (let j = 0; j < segments; j++) {
+      // 遍历水平段的内部边界（不包括最后一个）
+      // 计算当前网格块的四个顶点的索引
+      const a = i * (segments + 1) + (j + 1)
+      const b = i * (segments + 1) + j
+      const c = (i + 1) * (segments + 1) + j
+      const d = (i + 1) * (segments + 1) + (j + 1)
+
+      // 为每个网格块生成两个三角形面
+      indices.push(a, b, d) // 第一个面
+      indices.push(b, c, d) // 第二个面
+    }
+  }
+
+  // 在控制台输出顶点、法线和颜色数组（用于调试）
+  console.log(vertices, normals, colors)
+
+  // 将索引数据设置为BufferGeometry的索引
+  geometry.setIndex(new THREE.Uint16BufferAttribute(indices, 1)) // 注意：通常使用Uint16BufferAttribute
+
+  // 将顶点坐标、法线、颜色设置为BufferGeometry的属性
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+
+  // 创建一个新的Phong材质，启用双面渲染和顶点颜色
+  const material = new THREE.MeshPhongMaterial({
+    side: THREE.DoubleSide, // 双面渲染
+    vertexColors: true // 使用顶点颜色
   })
 
-  const attribute = new THREE.BufferAttribute(vertices, 3)
-  geometry.setAttribute('position', attribute)
-  const points = new THREE.Points(geometry, material1)
-  scene.add(points)
-  const lines = new THREE.Line(geometry, material)
-  scene.add(lines)
+  // 创建一个新的网格对象，并将其添加到场景中
+  const mesh = new THREE.Mesh(geometry, material)
+  scene.add(mesh)
+  gui.add(material, 'wireframe')
 }
 
-const drawCylinderGeometry = () => {
-  const p1 = new THREE.Vector3(-50, 20, 90)
-  const p2 = new THREE.Vector3(0, 0, 0)
-  const geometry = new THREE.CylinderGeometry(5, 5, 100, 32)
-  geometry.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-50, 20, 90)))
-  const material = new THREE.MeshBasicMaterial({ color: 0xffff00 })
-  const cylinder = new THREE.Mesh(geometry, material)
-  cylinder.position.set(0, 0, 0)
-  cylinder.lookAt(p1)
+const drawTunnel = () => {
+  //画一个隧道模型，隧道长度为100m,隧道的形状是个半椭圆，大半径为10m，小半径为5m
+  //隧道方向水平朝向屏幕
+  const tunnelLength = 100
+  const tunnelWidth = 10
+  const tunnelHeight = 5
+  const curve = new THREE.EllipseCurve(
+    0,
+    0, // ax, aY
+    20,
+    10, // xRadius, yRadius
+    0,
+    2 * Math.PI, // aStartAngle, aEndAngle
+    false, // aClockwise
+    0 // aRotation
+  )
 
-  // cylinder.lookAt(-50, 20, 90)
-  scene.add(cylinder)
+  let points = [
+    [10, 89, 0],
+    [50, 88, 10],
+    [76, 139, 20],
+    [126, 141, 12],
+    [150, 112, 8],
+    [157, 73, 0],
+    [180, 44, 5],
+    [207, 35, 10],
+    [232, 36, 0]
+  ]
+  points = [
+    [0, 0, 0],
+    [0, 500, 0]
+  ]
+  const pathVertices = []
+  //points转化为 vertices
+  for (var i = 0; i < points.length; i++) {
+    var x = points[i][0]
+    var y = points[i][2]
+    var z = points[i][1]
+    //这里做了一个特殊处理，并没有按照threejs三维坐标来做，而是采用xyz的坐标系来做
+    //这里x轴代表x轴，y轴代表z轴，z轴代表y轴
+    pathVertices[i] = new THREE.Vector3(x, y, z)
+  }
+  //根据路径点创建自定义曲线
+  const path = new THREE.CatmullRomCurve3(pathVertices)
+  const pointsX = curve.getPoints(50)
+  //创建TubeGeometry
+  var geometry = new THREE.TubeGeometry(path, 300, 100, 4, false)
+
+  const material = new THREE.LineBasicMaterial({ color: 0xff0000 })
+
+  // Create the final object to add to the scene
+  const ellipse = new THREE.Line(geometry, material)
+  // scene.add(ellipse)
+
+  const shape = new THREE.Shape()
+
+  // 近似上半部分椭圆的顶部
+  shape.moveTo(0, 0)
+  shape.lineTo(1, 1)
+  shape.lineTo(2, 0.5)
+  shape.lineTo(0, 0)
+
+  // 使用ExtrudeGeometry需要将Shape转换为Geometry
+  const extrudeSettings = {
+    steps: 1, // 因为我们是模拟管道截面，只需要一步拉伸
+    depth: 1, // 拉伸深度，这里是占位值，实际应用中可能不需要
+    bevelEnabled: false // 不需要倒角
+  }
+  const geometrycc = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+  const mesh33 = new THREE.Mesh(geometrycc, new THREE.MeshPhongMaterial())
+  // scene.add(mesh33)asdf
 }
 const setThreeTools = () => {
   //add stats
@@ -205,13 +283,13 @@ const render = async () => {
   //设置环境光，要不然模型没有颜色
   let ambientLight = new THREE.AmbientLight(0xffffff) //设置环境光
   scene.add(ambientLight) //将环境光添加到场景中
-  let pointLight = new THREE.PointLight(0xff0000)
-  pointLight.intensity = 9000
-  pointLight.decay = 0.0
-  pointLight.position.set(120, 120, 120) //设置点光源位置
-  scene.add(pointLight) //将点光源添加至场景
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
-  directionalLight.position.set(100, 900, 300)
+  // let pointLight = new THREE.PointLight(0xff0000)
+  // pointLight.intensity = 9000
+  // pointLight.decay = 0.0
+  // pointLight.position.set(120, 120, 120) //设置点光源位置
+  // scene.add(pointLight) //将点光源添加至场景
+  // const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+  // directionalLight.position.set(100, 900, 300)
   // scene.add(directionalLight)
 
   // const ambient = new THREE.AmbientLight(0xffffff, 0.4)
@@ -236,8 +314,8 @@ const render = async () => {
   // directionalLight.target = endMesh
   // scene.add(directionalLight)
   //可视化平行光
-  const dHelper = new THREE.DirectionalLightHelper(directionalLight, 10)
-  scene.add(dHelper)
+  // const dHelper = new THREE.DirectionalLightHelper(directionalLight, 10)
+  // scene.add(dHelper)
 
   //7.初始化渲染器
   //渲染器透明
@@ -248,6 +326,8 @@ const render = async () => {
     precision: 'highp' //着色器开启高精度
   })
 
+  //添加stats
+  document.body.appendChild(stats.dom)
   console.log(window.devicePixelRatio)
 
   //开启HiDPI设置
@@ -312,10 +392,8 @@ onMounted(() => {
   setThreeTools()
   setControls()
   // drawTestBox()
-  drawBufferGeometry()
-  tubeGeometry()
-  drawCylinderGeometry()
-  drawMesh()
+
+  drawTunnel()
   // threeTextClick()
   // aperture()
 })
