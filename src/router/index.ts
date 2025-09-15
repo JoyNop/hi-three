@@ -18,9 +18,9 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
-      path: '/hi',
-      name: 'hi',
-      component: () => import('../views/ThreeView.vue')
+      path: '/hr-demo',
+      name: 'hr',
+      component: () => import('../views/hr/ThreeView.vue')
     },
     {
       path: '/three-demo',
